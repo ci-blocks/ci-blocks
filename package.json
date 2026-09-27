@@ -6,7 +6,8 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "demo": "pnpm --filter @cib/core demo",
-    "dev": "pnpm --filter @cib/editor dev"
+    "gen-index": "pnpm --filter @cib/blocks-official gen-index",
+    "dev": "pnpm gen-index && pnpm --filter @cib/editor dev"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

@@ -1,0 +1,413 @@
+{
+  "格式": "cib",
+  "版本": "0.1.0",
+  "保存时间": "2026-09-26T02:50:40.171Z",
+  "语言": "zh-CN",
+  "工作流名称": "未命名工作流",
+  "工作区": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "cib/time-gate",
+          "id": "i%_tb[wXn/~O6l#hFuu%",
+          "x": 90,
+          "y": 50,
+          "fields": {
+            "比较": "之前",
+            "基准时间_年": "2025",
+            "基准时间_月": "01",
+            "基准时间_日": "01",
+            "基准时间_时": "00",
+            "基准时间_分": "00",
+            "基准时间_秒": "00",
+            "时区": "UTC-12:00"
+          },
+          "inputs": {
+            "执行块": {
+              "block": {
+                "type": "cib/ownership-guard",
+                "id": "^9fK()[k}%Irl3Qzxv~O",
+                "fields": {
+                  "负责人表": "captain_king: /选题/**",
+                  "操作类型": "任意 push",
+                  "违规动作": "拒绝合并",
+                  "豁免者": ""
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "cib/time-gate",
+              "id": "j#jH#IK?{!W[!nl!|jWz",
+              "fields": {
+                "比较": "之前",
+                "基准时间_年": "2025",
+                "基准时间_月": "01",
+                "基准时间_日": "01",
+                "基准时间_时": "00",
+                "基准时间_分": "00",
+                "基准时间_秒": "00",
+                "时区": "UTC-12:00"
+              },
+              "inputs": {
+                "执行块": {
+                  "block": {
+                    "type": "cib/ownership-guard",
+                    "id": "N2kB@FfO*SeBXf2=3WET",
+                    "fields": {
+                      "负责人表": "model_builder: /模型/基础部分/**.tex",
+                      "操作类型": "任意 push",
+                      "违规动作": "拒绝合并",
+                      "豁免者": ""
+                    },
+                    "next": {
+                      "block": {
+                        "type": "cib/build",
+                        "id": ";S5.4*b53n3SCfnEcTZ!",
+                        "fields": {
+                          "工具链": "Node",
+                          "包管理器": "pnpm",
+                          "版本": "22",
+                          "缓存": "开",
+                          "构建命令": "build",
+                          "工作目录": "."
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "next": {
+                "block": {
+                  "type": "cib/time-gate",
+                  "id": "2G-IBiKTJWb71bAe(4QH",
+                  "fields": {
+                    "比较": "之前",
+                    "基准时间_年": "2025",
+                    "基准时间_月": "01",
+                    "基准时间_日": "01",
+                    "基准时间_时": "00",
+                    "基准时间_分": "00",
+                    "基准时间_秒": "00",
+                    "时区": "UTC-12:00"
+                  },
+                  "inputs": {
+                    "执行块": {
+                      "block": {
+                        "type": "cib/ownership-guard",
+                        "id": ",R@%x#x~t=gjpu%{=MJe",
+                        "fields": {
+                          "负责人表": "code_editor: /代码/基础部分/** ; \ncode_editor: /数据/基础部分/** ; \ncode_editor: /图表/基础部分/** ; \nmodel_builder: /模型/改进部分/**.tex ; \ncaptain_king: 论文/**",
+                          "操作类型": "任意 push",
+                          "违规动作": "拒绝合并",
+                          "豁免者": ""
+                        },
+                        "next": {
+                          "block": {
+                            "type": "cib/test",
+                            "id": "BwcAP[UO4){V9.M[pq;8",
+                            "fields": {
+                              "测试命令": "npm test",
+                              "工作目录": ".",
+                              "超时分钟": "10",
+                              "上传报告": "是",
+                              "报告路径": "build/reports/tests/"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "cib/time-gate",
+                      "id": "XV%JweRVf.k9%~^2/x4n",
+                      "fields": {
+                        "比较": "之前",
+                        "基准时间_年": "2025",
+                        "基准时间_月": "01",
+                        "基准时间_日": "01",
+                        "基准时间_时": "00",
+                        "基准时间_分": "00",
+                        "基准时间_秒": "00",
+                        "时区": "UTC-12:00"
+                      },
+                      "inputs": {
+                        "执行块": {
+                          "block": {
+                            "type": "cib/ownership-guard",
+                            "id": "n!WWfngc,L]XENe0TtA|",
+                            "fields": {
+                              "负责人表": "model_builder: /模型/改进部分/**.tex ; \ncode_editor: /代码/改进部分/** ; \ncode_editor: /数据/改进部分/** ; \ncode_editor: /图表/改进部分/** ; \ncaptain_king: /论文/**",
+                              "操作类型": "任意 push",
+                              "违规动作": "拒绝合并",
+                              "豁免者": ""
+                            },
+                            "next": {
+                              "block": {
+                                "type": "cib/build",
+                                "id": "S,mdyKHo+f}#+gjD4J@0",
+                                "fields": {
+                                  "工具链": "Node",
+                                  "包管理器": "pnpm",
+                                  "版本": "22",
+                                  "缓存": "开",
+                                  "构建命令": "build",
+                                  "工作目录": "."
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "cib/time-gate",
+                          "id": "`{.ouUdUfe;v*JreQ~WF",
+                          "fields": {
+                            "比较": "之前",
+                            "基准时间_年": "2025",
+                            "基准时间_月": "01",
+                            "基准时间_日": "01",
+                            "基准时间_时": "00",
+                            "基准时间_分": "00",
+                            "基准时间_秒": "00",
+                            "时区": "UTC-12:00"
+                          },
+                          "inputs": {
+                            "执行块": {
+                              "block": {
+                                "type": "cib/ownership-guard",
+                                "id": "#HCpE|@{^}cJ9vIdEvf1",
+                                "fields": {
+                                  "负责人表": "code_editor: /代码/改进部分/** ; \ncode_editor: /数据/改进部分/** ; \ncode_editor: /图表/改进部分/** ; \ncode_editor: /论文/**.py ; \ncaptain_king: /论文/**",
+                                  "操作类型": "任意 push",
+                                  "违规动作": "拒绝合并",
+                                  "豁免者": ""
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "cib/test",
+                                    "id": "2_,l6nt9937OoWnfcl4y",
+                                    "fields": {
+                                      "测试命令": "npm test",
+                                      "工作目录": ".",
+                                      "超时分钟": "10",
+                                      "上传报告": "是",
+                                      "报告路径": "build/reports/tests/"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "cib/time-gate",
+                              "id": "e2a)4U@o;,(FKxoBk#b}",
+                              "fields": {
+                                "比较": "之前",
+                                "基准时间_年": "2025",
+                                "基准时间_月": "01",
+                                "基准时间_日": "01",
+                                "基准时间_时": "00",
+                                "基准时间_分": "00",
+                                "基准时间_秒": "00",
+                                "时区": "UTC-12:00"
+                              },
+                              "inputs": {
+                                "执行块": {
+                                  "block": {
+                                    "type": "cib/ownership-guard",
+                                    "id": "YdI:._txQHlsGx)kyHSu",
+                                    "fields": {
+                                      "负责人表": "captain_king: /论文/**",
+                                      "操作类型": "任意 push",
+                                      "违规动作": "拒绝合并",
+                                      "豁免者": ""
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "cib/test",
+                                        "id": "YmKaXn`HT/:#Yg5{sVv(",
+                                        "fields": {
+                                          "测试命令": "npm test",
+                                          "工作目录": ".",
+                                          "超时分钟": "10",
+                                          "上传报告": "是",
+                                          "报告路径": "build/reports/tests/"
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "cib/provenance",
+                                            "id": "2:/42LCZ#]f=VUG[zura",
+                                            "fields": {
+                                              "校验命令": "论文/verify_data.py",
+                                              "工作目录": ".",
+                                              "超时分钟": "30",
+                                              "上传证据": "是",
+                                              "证据路径": "evidence/",
+                                              "失败动作": "拒绝"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "cib/time-gate",
+                                  "id": "KX/.}]!;^Kpl+0)jE)p(",
+                                  "fields": {
+                                    "比较": "之前",
+                                    "基准时间_年": "2025",
+                                    "基准时间_月": "01",
+                                    "基准时间_日": "01",
+                                    "基准时间_时": "00",
+                                    "基准时间_分": "00",
+                                    "基准时间_秒": "00",
+                                    "时区": "UTC-12:00"
+                                  },
+                                  "inputs": {
+                                    "执行块": {
+                                      "block": {
+                                        "type": "cib/ownership-guard",
+                                        "id": "V)isoNgV=G}jmMg!Bgbg",
+                                        "fields": {
+                                          "负责人表": "captain_king: /论文/**",
+                                          "操作类型": "任意 push",
+                                          "违规动作": "拒绝合并",
+                                          "豁免者": ""
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "cib/test",
+                                            "id": "^=/(HhelEA7uX*$35!3/",
+                                            "fields": {
+                                              "测试命令": "npm test",
+                                              "工作目录": ".",
+                                              "超时分钟": "10",
+                                              "上传报告": "是",
+                                              "报告路径": "build/reports/tests/"
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "cib/provenance",
+                                                "id": "HJ7J;qHWxuPZ6A,U8W~;",
+                                                "fields": {
+                                                  "校验命令": "论文/verify_data.py",
+                                                  "工作目录": ".",
+                                                  "超时分钟": "30",
+                                                  "上传证据": "是",
+                                                  "证据路径": "evidence/",
+                                                  "失败动作": "拒绝"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "V}o:)PoP1/N#7S?b/Aew",
+          "x": 90,
+          "y": -190,
+          "fields": {
+            "内容": "建议节奏，以国赛74小时为例：\nT+1h，定选题，建议仓库设置一个TXT文件，做好选题记录\nT+4h，查找资料，推理基础模型\nT+16h，设计基础代码程序\nT+24h，模型改进部分完成，模型彻底封仓\nT+40h，代码改进部分完成，代码彻底封仓\nT+66h，论文初稿完成，进行审阅并整理支撑材料\nT+72h，论文最终定稿封仓"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "jXH}Q:4hiVHH#F,TllZ[",
+          "x": 710,
+          "y": 50,
+          "fields": {
+            "内容": "选题确定阶段，考虑到实际执行延迟，\n封仓建议放宽到T+1.5h左右"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "~4WfYD0_ntbOEE@ODz)g",
+          "x": 710,
+          "y": 470,
+          "fields": {
+            "内容": "基础模型确定阶段，建议设置仅latex文件通行，\n根据实际情况确定latex编译检验模式。\n封仓时间T+4h"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "^$^(K27;`qK;^ZPX5`yi",
+          "x": 710,
+          "y": 1190,
+          "fields": {
+            "内容": "基础代码确定阶段，根据实际情况设置文件通行类型，\n并进行运行检验。\n封仓时间T+16h"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "42V~LS6@X:gP.9FDp6Q:",
+          "x": 710,
+          "y": 1990,
+          "fields": {
+            "内容": "模型改进部分确定阶段，建模手后续无法操作模型部分。\n封仓时间T+24h"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "ndM,dD0-^CDckEb1w/UZ",
+          "x": 710,
+          "y": 2810,
+          "fields": {
+            "内容": "代码改进部分确定阶段，代码手后续无法操作程序部分。\n代码手注意设计追根溯源检验脚本。\n论文有效引用必须来源于【数据/**】、【代码/**】、【图表/**】\n引用不符合条件者，以及硬编码者，代码手有权打回。\n封仓时间T+40h"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "!rGFgX-Q8`-Ybm.:Bv(p",
+          "x": 710,
+          "y": 3570,
+          "fields": {
+            "内容": "论文初稿确定阶段。\n论文有效引用必须来源于【数据/**】、【代码/**】、【图表/**】\n引用不符合条件者，以及硬编码者，代码手有权打回。\n封仓时间T+66h"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "Bx:qam:uNf8TYW3As-Vu",
+          "x": 630,
+          "y": -190,
+          "fields": {
+            "内容": "注意事项：\n（1）代码手在程序封仓后，负责追根溯源脚本的制作工作，监督论文手的数据处理行为。\n（2）论文手所有的数据引用工作必须来源于/代码 /数据 /图表 文件夹，否则追根溯源模块打回。"
+          }
+        },
+        {
+          "type": "cib/text-note",
+          "id": "tg4/!vOcWD`luBVof;uk",
+          "x": 710,
+          "y": 4550,
+          "fields": {
+            "内容": "论文最终封仓。此后不得进行任何修改。\n封仓时间T+72h"
+          }
+        }
+      ]
+    }
+  }
+}

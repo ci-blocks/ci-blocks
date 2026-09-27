@@ -11,6 +11,9 @@
       "default": "./src/index.ts"
     }
   },
+  "scripts": {
+    "gen-index": "node scripts/gen-index.mjs"
+  },
   "dependencies": {
     "@cib/block-sdk": "workspace:*"
   }
