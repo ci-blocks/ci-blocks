@@ -4,6 +4,12 @@ export interface 语言包 {
     语言: 语言;
     名称: string;
 
+    品牌: {
+        名称: string;
+        出品: string;
+        slogan: string;
+    };
+
     通用: {
         删除: string;
         添加: string;
@@ -44,6 +50,7 @@ export interface 语言包 {
         语言: string;
         工作流名称占位: string;
         新建确认: string;
+        模板新建确认: string;
         已新建: string;
         已保存: string;
         已另存为: string;
@@ -85,6 +92,10 @@ export interface 语言包 {
             已加载外部积木: string;
             加载失败: string;
             无YAML: string;
+            从模板新建: string;
+            无模板: string;
+            已加载模板: string;
+            加载模板失败: string;
         };
         帮助菜单: {
             文档: string;
@@ -141,4 +152,30 @@ export interface 语言包 {
         字段: Record<string, string>;
         选项?: Record<string, string>;
     }>;
+}
+
+export function 取积木名(包: 语言包, blockId: string, 回退: string): string {
+    return 包.积木[blockId]?.keyword ?? 回退;
+}
+
+export function 取积木描述(包: 语言包, blockId: string, 回退: string): string {
+    return 包.积木[blockId]?.描述 ?? 回退;
+}
+
+export function 取字段名(
+    包: 语言包,
+    blockId: string,
+    字段键: string,
+    回退: string,
+): string {
+    return 包.积木[blockId]?.字段[字段键] ?? 回退;
+}
+
+export function 取选项名(
+    包: 语言包,
+    blockId: string,
+    原值: string,
+    回退: string,
+): string {
+    return 包.积木[blockId]?.选项?.[原值] ?? 回退;
 }
