@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Blockly from 'blockly';
 import * as zhHans from 'blockly/msg/zh-hans';
 import * as en from 'blockly/msg/en';
@@ -11,7 +11,6 @@ import { use语言 } from '../store/语言状态';
 import type { CIBBlock } from '@cib/block-sdk';
 import { type 语言包 } from '@cib/i18n';
 
-// 模块加载时先设一次（默认中文）
 Blockly.setLocale(zhHans as any);
 初始化右键菜单();
 
@@ -22,6 +21,8 @@ interface Props {
 export function 画布({ 工作区 }: Props) {
     const 容器 = useRef<HTMLDivElement>(null);
     const 快照ref = useRef<any>(null);
+    const [缩放, set缩放] = useState(0.9);
+    const [logo就绪, setLogo就绪] = useState(false);
     const 积木箱 = use编辑器((s) => s.积木箱);
     const setIR = use编辑器((s) => s.setIR);
     const 语言包 = use语言((s) => s.语言包);
@@ -31,11 +32,11 @@ export function 画布({ 工作区 }: Props) {
         if (积木箱.length === 0) return;
         if (!容器.current) return;
 
-        // ========== 1. 根据语言设置 Blockly locale ==========
+        setLogo就绪(false);
+
         const Blockly语言包 = 语言 === 'zh-CN' ? zhHans : en;
         Blockly.setLocale(Blockly语言包 as any);
 
-        // ========== 2. 保存旧快照 ==========
         let 快照 = 快照ref.current;
         if (工作区.current) {
             try {
@@ -48,15 +49,12 @@ export function 画布({ 工作区 }: Props) {
         }
 
         容器.current.innerHTML = '';
-
         设置右键菜单语言(语言包);
-
         注册所有积木(积木箱, 语言包);
 
-        // ========== 3. 注入新 workspace ==========
         const ws = Blockly.inject(容器.current, {
             toolbox: 生成工具箱(积木箱, 语言包),
-            grid: { spacing: 20, length: 3, colour: '#e0e0e0', snap: true },
+            grid: { spacing: 20, length: 3, colour: '#bbbbbb', snap: true },
             zoom: { controls: true, wheel: true, startScale: 0.9 },
             trashcan: true,
             renderer: 'zelos',
@@ -65,7 +63,6 @@ export function 画布({ 工作区 }: Props) {
 
         工作区.current = ws;
 
-        // ========== 4. 恢复内容 ==========
         if (快照) {
             try {
                 Blockly.serialization.workspaces.load(快照, ws);
@@ -83,29 +80,79 @@ export function 画布({ 工作区 }: Props) {
             }
         }
 
-        // ========== 5. 监听 ==========
+        // 初始居中 + 显示 logo
+        setTimeout(() => {
+            try {
+                Blockly.svgResize(ws);
+                const 视口宽 = 容器.current?.clientWidth ?? 800;
+                const 视口高 = 容器.current?.clientHeight ?? 600;
+                (ws as any).scroll?.(视口宽 / 2, 视口高 / 2);
+                set缩放(ws.getScale?.() ?? 0.9);
+                setLogo就绪(true);
+            } catch (e) {
+                console.warn('初始居中失败：', e);
+            }
+        }, 100);
+
+        // 变更监听：同步 IR + 缩放
+        let 动画帧: number | null = null;
         const 更新 = () => {
             const nodes = 工作区转IR(ws, (id) => 积木箱.find((b) => b.id === id));
             setIR(nodes);
             try {
                 快照ref.current = Blockly.serialization.workspaces.save(ws);
             } catch {}
+
+            if (动画帧) cancelAnimationFrame(动画帧);
+            动画帧 = requestAnimationFrame(() => {
+                try {
+                    set缩放(ws.getScale?.() ?? 0.9);
+                } catch {}
+            });
         };
         ws.addChangeListener(更新);
         更新();
 
         const 自适应 = () => Blockly.svgResize(ws);
         window.addEventListener('resize', 自适应);
-        setTimeout(自适应, 100);
 
         return () => {
             window.removeEventListener('resize', 自适应);
+            if (动画帧) cancelAnimationFrame(动画帧);
         };
     }, [积木箱, 语言]);
 
     return (
-        <div style={{ position: 'absolute', inset: 0, background: 'white' }}>
-            <div ref={容器} style={{ position: 'absolute', inset: 0 }} />
+        <div style={{ position: 'absolute', inset: 0 }}>
+            {/* logo：最底层 */}
+            {logo就绪 && (
+                <img
+                    src="/CI-Blocks%20Logo.png"
+                    alt="CIB"
+                    style={{
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: `translate(-50%, -50%) scale(${缩放})`,
+                        width: 1000,
+                        height: 'auto',
+                        opacity: 0.3,
+                        pointerEvents: 'none',
+                        zIndex: 0,
+                        userSelect: 'none',
+                    }}
+                />
+            )}
+
+            {/* Blockly 画布：在 logo 之上 */}
+            <div
+                ref={容器}
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 1,
+                }}
+            />
         </div>
     );
 }
