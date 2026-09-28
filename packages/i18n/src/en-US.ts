@@ -4,6 +4,12 @@ export const enUS: 语言包 = {
   语言: 'en-US',
   名称: 'English',
 
+  品牌: {
+    名称: 'Milestone Technology',
+    出品: 'Made by Milestone Technology',
+    slogan: 'One step, one milestone, one dream',
+  },
+
   通用: {
     删除: 'Delete',
     添加: 'Add',
@@ -44,6 +50,7 @@ export const enUS: 语言包 = {
     语言: 'Language:',
     工作流名称占位: 'Workflow name',
     新建确认: 'New will clear the current canvas. Continue?',
+    模板新建确认: 'Creating from template "%1" will clear the current canvas. Continue?',
     已新建: 'Created',
     已保存: 'Saved',
     已另存为: 'Saved as',
@@ -85,6 +92,10 @@ export const enUS: 语言包 = {
       已加载外部积木: 'Loaded %1 external blocks',
       加载失败: 'Load failed',
       无YAML: 'No YAML to copy',
+      从模板新建: 'New from Template…',
+      无模板: '(No templates)',
+      已加载模板: 'Template loaded',
+      加载模板失败: 'Failed to load template',
     },
     帮助菜单: {
       文档: 'Documentation',
@@ -92,7 +103,7 @@ export const enUS: 语言包 = {
       关于: 'About CI Blocks',
       GitHub仓库: 'GitHub Repository',
       关于标题: 'About CI Blocks',
-      关于描述: 'Build CI scripts by stacking blocks',
+      关于描述: 'Build CI scripts by stacking blocks. Turn CI config from a chore into LEGO.',
       版本: 'Version',
       快捷键标题: 'Shortcuts',
       分组编辑器: 'Editor',

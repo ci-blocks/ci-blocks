@@ -70,7 +70,7 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
 
     const 从模板新建 = async (文件: string, 名称: string) => {
         if (!工作区.current) return;
-        if (!confirm(`从模板「${名称}」新建会清空当前画布，确定？`)) return;
+        if (!confirm(工具.模板新建确认.replace('%1', 名称))) return;
         try {
             const 数据 = await 加载模板(文件);
             if (!工作区.current) return;
@@ -78,9 +78,9 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
             应用CIB到工作区(数据, 工作区.current);
             if (数据.工作流名称) 设置工作流名称(数据.工作流名称);
             if (数据.语言) 设置语言(数据.语言 as 语言);
-            显示提示(`已加载模板：${名称}`);
+            显示提示(`${工具.工具菜单.已加载模板}：${名称}`);
         } catch (e) {
-            alert(`加载模板失败：${(e as Error).message}`);
+            alert(`${工具.工具菜单.加载模板失败}：${(e as Error).message}`);
         }
         set当前菜单(null);
     };
@@ -369,12 +369,13 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
-                    padding: '8px 16px',
+                    padding: '4px 22px',
                     background: '#425466',
                     color: 'white',
                     borderBottom: '1px solid #3a454f',
                     position: 'relative',
                     zIndex: 100,
+                    fontSize: 18
                 }}
             >
                 <a
@@ -404,9 +405,9 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     {当前菜单 === '文件' && (
                         <下拉菜单>
                             <菜单项 onClick={新建} 快捷键="Ctrl+N">{工具.新建}</菜单项>
-                            <子菜单 名="从模板新建…">
+                            <子菜单 名={工具.工具菜单.从模板新建}>
                                 {模板列表.length === 0 ? (
-                                    <菜单项 onClick={() => {}}>（无模板）</菜单项>
+                                    <菜单项 onClick={() => {}}>{工具.无模板}</菜单项>
                                 ) : (
                                     模板列表.map((t) => (
                                         <菜单项 key={t.id} onClick={() => 从模板新建(t.文件, t.名称)}>
@@ -511,7 +512,7 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
 
                 {提示 && <span style={{ fontSize: 12, color: '#7fdbaf' }}>{提示}</span>}
 
-                <label style={{ fontSize: 13 }}>
+                <label style={{ fontSize: 13 ,fontWeight: 'bold'}}>
                     {工具.语言}
                     <select
                         value={语言}
@@ -556,7 +557,7 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                             onClick={() => set显示加载外部积木(false)}
                             style={{ padding: '6px 16px', border: '1px solid #ccc', borderRadius: 4, cursor: 'pointer', background: 'white' }}
                         >
-                            取消
+                            {语言包.通用.取消}
                         </button>
                         <button
                             onClick={执行加载外部积木}
@@ -584,7 +585,7 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                         {/* CIB logo */}
                         <img
                             src="/favicon.svg"
-                            alt="不积跬步 无以至千里"
+                            alt={语言包.品牌.slogan}
                             style={{ width: 64, height: 64 }}
                         />
                         <img
@@ -598,14 +599,14 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                         {/* 分隔线 */}
                         <div style={{ height: 1, background: '#eee', width: '60%', margin: '8px 0' }} />
 
-                        {/* 千里科技 logo */}
+                        {/* 出品方 logo */}
                         <img
                             src="/”千里科技“logo.svg"
-                            alt="千里科技"
+                            alt={语言包.品牌.名称}
                             style={{ width: 120, height: 'auto' }}
                         />
-                        <div style={{ color: '#999', fontSize: 13 }}>千里科技 出品</div>
-
+                        <div style={{ color: '#999', fontSize: 13 }}>{语言包.品牌.出品}</div>
+                        <div style={{ color: '#999', fontSize: 11 }}>{语言包.品牌.slogan}</div>
                         <div style={{ marginTop: 8, color: '#666', fontSize: 13 }}>
                             {工具.帮助菜单.版本}：{__CIB_VERSION__}
                         </div>
@@ -647,12 +648,14 @@ function 菜单按钮({ 名, 开, onClick }: { 名: string; 开: boolean; onClic
         <button
             onClick={onClick}
             style={{
-                padding: '4px 12px',
+                padding: '4px 14px',
                 background: 开 ? '#1a252f' : 'transparent',
                 border: '1px solid #4a5f75',
                 color: 'white',
                 borderRadius: 4,
                 cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: 'bold'
             }}
         >
             {名}
