@@ -98,7 +98,7 @@ export function 三栏布局() {
                 <div
                     style={{
                         background: '#f39c12',
-                        color: 'white',
+                        color: '#ddd',
                         padding: '4px 16px',
                         fontSize: 12,
                     }}
@@ -112,7 +112,7 @@ export function 三栏布局() {
                     display: 'grid',
                     gridTemplateColumns: '1fr 480px',
                     gap: '1px',
-                    background: '#ddd',
+                    background: '#fff',
                     overflow: 'hidden',
                 }}
             >

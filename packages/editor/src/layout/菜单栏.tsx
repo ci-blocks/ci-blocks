@@ -577,15 +577,20 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                             flexDirection: 'column',
                             alignItems: 'center',
                             textAlign: 'center',
-                            lineHeight: 1.8,
-                            gap: 12,
+                            lineHeight: 1.5,
+                            gap: 0,
                         }}
                     >
                         {/* CIB logo */}
                         <img
                             src="/favicon.svg"
-                            alt="CI Blocks"
+                            alt="不积跬步 无以至千里"
                             style={{ width: 64, height: 64 }}
+                        />
+                        <img
+                            src="/CI-Blocks%20Logo.svg"
+                            alt="CI Blocks"
+                            style={{ width: 240, height: 'auto' }}
                         />
                         <div><strong style={{ fontSize: 18 }}>CI Blocks</strong></div>
                         <div style={{ color: '#666' }}>{工具.帮助菜单.关于描述}</div>
