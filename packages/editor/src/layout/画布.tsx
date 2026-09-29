@@ -84,9 +84,6 @@ export function 画布({ 工作区 }: Props) {
         setTimeout(() => {
             try {
                 Blockly.svgResize(ws);
-                const 视口宽 = 容器.current?.clientWidth ?? 800;
-                const 视口高 = 容器.current?.clientHeight ?? 600;
-                (ws as any).scroll?.(视口宽 / 2, 视口高 / 2);
                 set缩放(ws.getScale?.() ?? 0.9);
                 setLogo就绪(true);
             } catch (e) {
@@ -134,7 +131,7 @@ export function 画布({ 工作区 }: Props) {
                         left: '50%',
                         top: '50%',
                         transform: `translate(-50%, -50%) scale(${缩放})`,
-                        width: 1000,
+                        width: 800,
                         height: 'auto',
                         opacity: 0.3,
                         pointerEvents: 'none',

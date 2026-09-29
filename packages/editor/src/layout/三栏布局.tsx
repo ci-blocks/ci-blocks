@@ -22,6 +22,7 @@ import {
 import { 设置积木箱 } from '../store/编辑器状态';
 import { use语言 } from '../store/语言状态';
 import { 加载外部积木, 从URL读取积木参数 } from '../blocks/加载器';
+import {isFileLoadingAllowed} from "vite";
 
 const 内置积木 = [
     行为条件,
@@ -98,7 +99,7 @@ export function 三栏布局() {
                 <div
                     style={{
                         background: '#f39c12',
-                        color: '#ddd',
+                        color: '#ddddddaa',
                         padding: '4px 16px',
                         fontSize: 12,
                     }}
@@ -112,14 +113,14 @@ export function 三栏布局() {
                     display: 'grid',
                     gridTemplateColumns: '1fr 480px',
                     gap: '1px',
-                    background: '#fff',
+                    background: '#ffffff',
                     overflow: 'hidden',
                 }}
             >
                 <div style={{ position: 'relative', overflow: 'hidden', height: '100%', minHeight: 0 }}>
                     <画布 工作区={工作区} />
                 </div>
-                <div style={{ position: 'relative', overflow: 'auto', height: '100%', minHeight: 0 }}>
+                <div style={{ position: 'relative', overflow: 'auto', height: '100%', minHeight: 0, background: '#dddddd' }}>
                     <预览栏 工作流名称={工作流名称} />
                 </div>
             </div>

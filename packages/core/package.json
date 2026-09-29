@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@cib/block-sdk": "workspace:*",
+    "@cib/i18n": "workspace:*",
     "yaml": "^2.4.0"
   }
 }

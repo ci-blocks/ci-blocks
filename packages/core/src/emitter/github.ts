@@ -10,6 +10,8 @@ import type {
     IR判定,
     IR条件,
 } from '../ir/types';
+import type { 语言包 } from '@cib/i18n';
+import { zhCN } from '@cib/i18n';
 
 const 无过滤事件 = new Set(['workflow_dispatch', 'schedule']);
 
@@ -23,13 +25,22 @@ function 转PosixTZ(tz: string): string {
     return 分 === 0 ? `UTC${符号}${时}` : `UTC${符号}${时}:${分}`;
 }
 
-function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
+/** 把 %1 %2 ... 按顺序替换。参数里的 $VAR 会原样保留 */
+function 填(模板: string, ...参数: string[]): string {
+    return 参数.reduce(
+        (s, p, i) => s.replace(`%${i + 1}`, p),
+        模板,
+    );
+}
+
+function 生成门禁步骤(门禁: IR门禁, 序号: number, 包: 语言包): IR步骤 {
+    const L = 包.CI日志;
     switch (门禁.blockId) {
         case 'cib/time-gate':
             return {
                 kind: '步骤',
                 keyword: 门禁.keyword,
-                name: `门禁（${序号}）：${门禁.keyword}`,
+                name: 填(L.门禁, String(序号), 门禁.keyword),
                 run: `echo "时间铡刀已改为条件积木"`,
             };
 
@@ -42,7 +53,7 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
             return {
                 kind: '步骤',
                 keyword: '越权控制',
-                name: `越权检查（${操作类型}）（${序号}）`,
+                name: 填(L.越权检查, 操作类型, String(序号)),
                 env: {
                     CIB_OWNERS: 负责人表,
                     CIB_EXEMPT: 豁免者,
@@ -54,7 +65,7 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     'if [ -n "$CIB_EXEMPT" ]; then',
                     '  for e in $(echo "$CIB_EXEMPT" | tr "," " "); do',
                     '    if [ "$e" = "$ACTOR" ]; then',
-                    '      echo "豁免者 $ACTOR，跳过越权检查"',
+                    `      echo "${填(L.越权豁免, '$ACTOR')}"`,
                     '      exit 0',
                     '    fi',
                     '  done',
@@ -65,7 +76,7 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     'ALLOWED=$(echo "$CIB_OWNERS" | awk -F: -v u="$ACTOR" \'$1==u {print $2}\')',
                     '',
                     'if [ -z "$ALLOWED" ]; then',
-                    '  echo "::error::$ACTOR 不在负责人表中"',
+                    `  echo "::error::${填(L.越权不在负责人表, '$ACTOR')}"`,
                     '  exit 1',
                     'fi',
                     '',
@@ -94,20 +105,20 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     '    done',
                     '  done <<< "$ALLOWED"',
                     '  if [ "$OK" = "0" ]; then',
-                    '    echo "::error::$ACTOR 无权修改 $f"',
+                    `    echo "::error::${填(L.越权无权修改, '$ACTOR', '$f')}"`,
                     '    FAIL=1',
                     '  fi',
                     'done <<< "$CHANGED"',
                     '',
                     'if [ "$FAIL" = "1" ]; then',
                     '  if [ "$CIB_ACTION" = "仅告警" ]; then',
-                    '    echo "::warning::越权但仅告警"',
+                    `    echo "::warning::${L.越权仅告警}"`,
                     '    exit 0',
                     '  fi',
                     '  exit 1',
                     'fi',
                     '',
-                    'echo "越权检查通过"',
+                    `echo "${L.越权检查通过}"`,
                 ].join('\n'),
             };
         }
@@ -122,7 +133,7 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
             return {
                 kind: '步骤',
                 keyword: '次数铡刀',
-                name: `次数检查（${序号}）`,
+                name: 填(L.次数检查, String(序号)),
                 env: {
                     CIB_SOURCE: 来源,
                     CIB_THRESHOLD: 阈值,
@@ -134,8 +145,8 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     'BASE="${GITHUB_BEFORE:-$(git rev-parse HEAD~1 2>/dev/null || echo "")}"',
                     'HEAD="${GITHUB_SHA:-HEAD}"',
                     '',
-                    'echo "计数来源: $CIB_SOURCE"',
-                    'echo "计数范围: $CIB_RANGE"',
+                    `echo "${L.计数来源}: $CIB_SOURCE"`,
+                    `echo "${L.计数范围}: $CIB_RANGE"`,
                     '',
                     'COUNT=0',
                     '',
@@ -164,9 +175,9 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     '    ;;',
                     'esac',
                     '',
-                    'echo "实际值: $COUNT"',
-                    'echo "阈值: $CIB_THRESHOLD"',
-                    'echo "比较: $CIB_COMPARE"',
+                    `echo "${L.实际值}: $COUNT"`,
+                    `echo "${L.阈值}: $CIB_THRESHOLD"`,
+                    `echo "${L.比较}: $CIB_COMPARE"`,
                     '',
                     'FAIL=0',
                     'case "$CIB_COMPARE" in',
@@ -177,14 +188,14 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     '',
                     'if [ "$FAIL" = "1" ]; then',
                     '  if [ "$CIB_MODE" = "warn" ]; then',
-                    '    echo "::warning::次数检查未通过（$COUNT $CIB_COMPARE $CIB_THRESHOLD），仅告警"',
+                    `    echo "::warning::${填(L.次数仅告警, '$COUNT', '$CIB_COMPARE', '$CIB_THRESHOLD')}"`,
                     '    exit 0',
                     '  fi',
-                    '  echo "::error::次数检查未通过（$COUNT $CIB_COMPARE $CIB_THRESHOLD）"',
+                    `  echo "::error::${填(L.次数检查未通过, '$COUNT', '$CIB_COMPARE', '$CIB_THRESHOLD')}"`,
                     '  exit 1',
                     'fi',
                     '',
-                    'echo "次数检查通过"',
+                    `echo "${L.次数检查通过}"`,
                 ].join('\n'),
             };
         }
@@ -198,7 +209,7 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
             return {
                 kind: '步骤',
                 keyword: '异地容灾',
-                name: `异地容灾（${序号}）`,
+                name: 填(L.异地容灾, String(序号)),
                 env: {
                     CIB_PROTECTED: 保护分支,
                     CIB_REQUIRE_CI: 要求CI === '是' ? 'true' : 'false',
@@ -218,16 +229,16 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     'done',
                     '',
                     'if [ "$IS_PROTECTED" = "0" ]; then',
-                    '  echo "分支 $TARGET 不在保护列表，跳过"',
+                    `  echo "${填(L.分支不在保护列表, '$TARGET')}"`,
                     '  exit 0',
                     'fi',
                     '',
-                    'echo "分支 $TARGET 受保护，开始检查"',
+                    `echo "${填(L.分支受保护开始检查, '$TARGET')}"`,
                     '',
                     'if [ "${GITHUB_EVENT_NAME}" = "push" ]; then',
                     '  if echo "$CIB_FORBID" | grep -q "直接 commit"; then',
                     '    if [ "${GITHUB_ACTOR}" != "github-actions[bot]" ] && [ "${GITHUB_ACTOR}" != "dependabot[bot]" ]; then',
-                    '      echo "::warning::检测到 $GITHUB_ACTOR 直接 push 到保护分支 $TARGET"',
+                    `      echo "::warning::${填(L.检测直接push, '$GITHUB_ACTOR', '$TARGET')}"`,
                     '    fi',
                     '  fi',
                     'fi',
@@ -236,15 +247,15 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
                     '  if [ "$CIB_MIN_REVIEW" -gt 0 ]; then',
                     '    REVIEWS="${GITHUB_EVENT_PULL_REQUEST_REVIEWS:-0}"',
                     '    if [ "$REVIEWS" -lt "$CIB_MIN_REVIEW" ]; then',
-                    '      echo "::error::PR 需要至少 $CIB_MIN_REVIEW 个 review，当前 $REVIEWS"',
+                    `      echo "::error::${填(L.PR需要review, '$CIB_MIN_REVIEW', '$REVIEWS')}"`,
                     '      exit 1',
                     '    fi',
                     '  fi',
                     'fi',
                     '',
-                    'echo "::notice::提醒：请在仓库 Settings → Branches 配置分支保护规则"',
+                    `echo "::notice::${L.分支保护提醒}"`,
                     '',
-                    'echo "保护分支检查通过"',
+                    `echo "${L.分支保护检查通过}"`,
                 ].join('\n'),
             };
         }
@@ -253,8 +264,8 @@ function 生成门禁步骤(门禁: IR门禁, 序号: number): IR步骤 {
             return {
                 kind: '步骤',
                 keyword: 门禁.keyword,
-                name: `门禁（${序号}）：${门禁.keyword}`,
-                run: `echo "未实现的门禁 ${门禁.blockId}" && exit 1`,
+                name: 填(L.门禁, String(序号), 门禁.keyword),
+                run: `echo "${填(L.未知门禁, 门禁.blockId)}" && exit 1`,
             };
     }
 }
@@ -264,7 +275,9 @@ function 生成条件检查步骤(
     条件: IR条件,
     序号: number,
     父条件ID: string | null,
+    包: 语言包,
 ): { 步骤列表: IR步骤[]; 输出名: string | null; 检查ID: string | null } {
+    const L = 包.CI日志;
     const 父if = 父条件ID
         ? `steps.${父条件ID}.outputs.CIB_MATCH == 'true'`
         : undefined;
@@ -277,15 +290,14 @@ function 生成条件检查步骤(
         const 纯时间 = 基准.replace(/Z$/, '').replace(/[+-]\d{2}:\d{2}$/, '');
         const posixTZ = 转PosixTZ(时区);
         const 运算符 = 比较 === '之后' ? '-gt' : '-lt';
-        const 描述 =
-            比较 === '之后' ? '当前时间在基准时间之后' : '当前时间在基准时间之前';
+        const 描述 = 比较 === '之后' ? L.时间之后 : L.时间之前;
 
         const 检查ID = `cib_time_${序号}`;
 
         const 检查步骤: IR步骤 = {
             kind: '步骤',
             keyword: '时间检查',
-            name: `时间检查（${序号}）`,
+            name: 填(L.时间检查, String(序号)),
             id: 检查ID,
             ...(父if ? { if: 父if } : {}),
             env: { CIB_TZ: posixTZ, CIB_TZ_LABEL: 时区 },
@@ -304,7 +316,7 @@ function 生成条件检查步骤(
                 '  || echo "")',
                 '',
                 'if [ -z "$BASE_EPOCH" ]; then',
-                '  echo "::error::无法解析基准时间：$BASE_RAW（时区 $CIB_TZ_LABEL）"',
+                `  echo "::error::${填(L.无法解析基准时间, '$BASE_RAW', '$CIB_TZ_LABEL')}"`,
                 '  exit 1',
                 'fi',
                 '',
@@ -314,7 +326,7 @@ function 生成条件检查步骤(
                 `  echo "${描述}"`,
                 `  echo "CIB_MATCH=true" >> $GITHUB_OUTPUT`,
                 'else',
-                `  echo "${描述} 不成立，跳过"`,
+                `  echo "${填(L.条件不成立跳过, 描述)}"`,
                 `  echo "CIB_MATCH=false" >> $GITHUB_OUTPUT`,
                 'fi',
             ].join('\n'),
@@ -335,7 +347,7 @@ function 生成条件检查步骤(
         const 检查步骤: IR步骤 = {
             kind: '步骤',
             keyword: '次数检查',
-            name: `次数检查（${序号}）`,
+            name: 填(L.次数检查, String(序号)),
             id: 检查ID,
             ...(父if ? { if: 父if } : {}),
             env: {
@@ -349,8 +361,8 @@ function 生成条件检查步骤(
                 'BASE="${GITHUB_BEFORE:-$(git rev-parse HEAD~1 2>/dev/null || echo "")}"',
                 'HEAD="${GITHUB_SHA:-HEAD}"',
                 '',
-                'echo "计数来源: $CIB_SOURCE"',
-                'echo "计数范围: $CIB_RANGE"',
+                `echo "${L.计数来源}: $CIB_SOURCE"`,
+                `echo "${L.计数范围}: $CIB_RANGE"`,
                 '',
                 'COUNT=0',
                 '',
@@ -379,9 +391,9 @@ function 生成条件检查步骤(
                 '    ;;',
                 'esac',
                 '',
-                'echo "实际值: $COUNT"',
-                'echo "阈值: $CIB_THRESHOLD"',
-                'echo "比较: $CIB_COMPARE"',
+                `echo "${L.实际值}: $COUNT"`,
+                `echo "${L.阈值}: $CIB_THRESHOLD"`,
+                `echo "${L.比较}: $CIB_COMPARE"`,
                 '',
                 'MATCH=0',
                 'case "$CIB_COMPARE" in',
@@ -391,10 +403,10 @@ function 生成条件检查步骤(
                 'esac',
                 '',
                 'if [ "$MATCH" = "1" ]; then',
-                '  echo "次数条件成立"',
+                `  echo "${L.次数条件成立}"`,
                 '  echo "CIB_MATCH=true" >> $GITHUB_OUTPUT',
                 'else',
-                '  echo "次数条件不成立，跳过"',
+                `  echo "${L.次数条件不成立}"`,
                 '  echo "CIB_MATCH=false" >> $GITHUB_OUTPUT',
                 'fi',
             ].join('\n'),
@@ -408,8 +420,8 @@ function 生成条件检查步骤(
             {
                 kind: '步骤',
                 keyword: '未知条件',
-                name: `未知条件（${序号}）`,
-                run: 'echo "未知条件"',
+                name: 填(L.未知条件, String(序号)),
+                run: 'echo "unknown condition"',
             },
         ],
         输出名: null,
@@ -417,7 +429,7 @@ function 生成条件检查步骤(
     };
 }
 
-/** 收集条件里的所有 job（含嵌套） */
+/** 收集条件里的所有 job（含嵌套）—— 保持原逻辑，未在本次 i18n 范围 */
 function 收集条件作业(
     条件: IR条件,
     条件序号: number,
@@ -425,7 +437,6 @@ function 收集条件作业(
     jobs: Record<string, unknown>,
     全局序号: { 值: number },
 ): void {
-    // 当前条件的引用表达式
     const 条件引用 = [
         ...父条件链.map((p) => `needs.gates.outputs.CIB_MATCH_${p.序号} == 'true'`),
     ];
@@ -444,13 +455,9 @@ function 收集条件作业(
                 'runs-on': n.运行环境,
                 steps: n.步骤.map(步骤转YAML),
             };
-        } else if (n.kind === '门禁') {
-            // 门禁嵌条件：作为 gates job 的 step，加 if
-            // 这个在 收集条件门禁 里处理
         } else if (n.kind === '条件') {
-            // 嵌套条件：递归
             const 内序号 = ++全局序号.值;
-            const { 检查ID } = 生成条件检查步骤(n, 内序号, null);
+            const { 检查ID } = 生成条件检查步骤(n, 内序号, null, zhCN);
             const 内父链 = [
                 ...父条件链,
                 { 序号: 条件序号, 检查ID: 父条件链[父条件链.length - 1]?.检查ID ?? '' },
@@ -466,6 +473,7 @@ function 收集条件门禁步骤(
     条件序号: number,
     父条件链: number[],
     结果: IR步骤[],
+    包: 语言包,
 ): void {
     const 父if = 父条件链
         .map((s) => `steps.cib_time_${s}.outputs.CIB_MATCH == 'true'`)
@@ -473,15 +481,16 @@ function 收集条件门禁步骤(
 
     for (const n of 条件.条件成立时执行) {
         if (n.kind === '门禁') {
-            const 步骤 = 生成门禁步骤(n, 条件序号);
+            const 步骤 = 生成门禁步骤(n, 条件序号, 包);
             结果.push({
                 ...步骤,
-                if: 父if ? `${父if} && steps.cib_time_${条件序号}.outputs.CIB_MATCH == 'true'` : `steps.cib_time_${条件序号}.outputs.CIB_MATCH == 'true'`,
+                if: 父if
+                    ? `${父if} && steps.cib_time_${条件序号}.outputs.CIB_MATCH == 'true'`
+                    : `steps.cib_time_${条件序号}.outputs.CIB_MATCH == 'true'`,
             });
         } else if (n.kind === '条件') {
-            // 嵌套条件里的门禁
             const 内序号 = 条件序号 + 1;
-            收集条件门禁步骤(n, 内序号, [...父条件链, 条件序号], 结果);
+            收集条件门禁步骤(n, 内序号, [...父条件链, 条件序号], 结果, 包);
         }
     }
 }
@@ -563,7 +572,12 @@ function 展开判定(
     }
 }
 
-export function 生成GitHubYAML(工作流: IR工作流): string {
+export function 生成GitHubYAML(
+    工作流: IR工作流,
+    包: 语言包 = zhCN,
+): string {
+    const L = 包.CI日志;
+
     const 触发器节点 = 工作流.节点.filter((n) => n.kind === '触发器') as IR触发器[];
     const 过滤节点 = 工作流.节点.filter((n) => n.kind === '过滤') as IR过滤[];
     const 门禁节点 = 工作流.节点.filter((n) => n.kind === '门禁') as IR门禁[];
@@ -616,26 +630,36 @@ export function 生成GitHubYAML(工作流: IR工作流): string {
         for (const { 条件, 序号, 父链 } of 所有条件) {
             const 父条件ID =
                 父链.length > 0 ? `cib_time_${父链[父链.length - 1]}` : null;
-            const { 步骤列表, 输出名, 检查ID } = 生成条件检查步骤(条件, 序号, 父条件ID);
+            const { 步骤列表, 输出名, 检查ID } = 生成条件检查步骤(
+                条件,
+                序号,
+                父条件ID,
+                包,
+            );
             条件检查步骤.push(...步骤列表);
             if (输出名 && 检查ID) {
                 gatesOutputs[输出名] = `\${{ steps.${检查ID}.outputs.CIB_MATCH }}`;
             }
         }
 
-        const 门禁步骤 = 门禁节点.map((门禁, i) => 生成门禁步骤(门禁, i + 1));
+        const 门禁步骤 = 门禁节点.map((门禁, i) =>
+            生成门禁步骤(门禁, i + 1, 包),
+        );
 
-        // 收集条件里的门禁 step
         const 条件门禁步骤: IR步骤[] = [];
         for (const { 条件, 序号 } of 所有条件) {
-            收集条件门禁步骤(条件, 序号, [], 条件门禁步骤);
+            收集条件门禁步骤(条件, 序号, [], 条件门禁步骤, 包);
         }
 
         jobs['gates'] = {
             'runs-on': 'ubuntu-latest',
             ...(Object.keys(gatesOutputs).length > 0 ? { outputs: gatesOutputs } : {}),
             steps: [
-                { name: '检出代码', uses: 'actions/checkout@v4', with: { 'fetch-depth': 0 } },
+                {
+                    name: L.检出代码,
+                    uses: 'actions/checkout@v4',
+                    with: { 'fetch-depth': 0 },
+                },
                 ...条件检查步骤.map(步骤转YAML),
                 ...门禁步骤.map(步骤转YAML),
                 ...条件门禁步骤.map(步骤转YAML),
@@ -647,7 +671,6 @@ export function 生成GitHubYAML(工作流: IR工作流): string {
     const 作业计数器 = { 值: 0 };
     for (const { 条件, 序号, 父链 } of 所有条件) {
         const 父链完整 = [...父链, 序号];
-        // 当前条件的引用
         const 条件引用 = 父链完整.map(
             (s) => `needs.gates.outputs.CIB_MATCH_${s} == 'true'`,
         );

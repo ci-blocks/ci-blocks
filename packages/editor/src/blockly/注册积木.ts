@@ -23,6 +23,11 @@ const 日选项 = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2,
 const 时选项 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 const 分秒选项 = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
+/** 时间铡刀的默认时区：中文用北京时间，英文用洛杉矶时间 */
+function 默认时区(语言: string): string {
+    return 语言 === 'en-US' ? 'UTC-08:00' : 'UTC+08:00';
+}
+
 function 展开日期时间(字段: 字段描述, 显示名: string) {
     const 键 = 字段.键;
     return {
@@ -211,6 +216,7 @@ function 注册时间铡刀积木(block: CIBBlock<any>, 包: 语言包) {
     const 图标 = block.meta.icon ?? '⏰';
     const 字段名 = (键: string) => 取字段名(包, block.id, 键, 键);
     const 选项名 = (值: string) => 取选项名(包, block.id, 值, 值);
+    const 通用 = 包.通用;
     const 颜色 = 分类颜色[block.category] ?? 0;
     const 提示 = 包.积木[block.id]?.描述 ?? block.meta.描述;
 
@@ -222,6 +228,7 @@ function 注册时间铡刀积木(block: CIBBlock<any>, 包: 语言包) {
 
     const 时区字段 = block.schema.find((f) => f.键 === '时区');
     const 时区选项: [string, string][] = (时区字段?.选项 ?? []).map((o) => [o, o]);
+    const 初始时区 = 默认时区(包.语言);
 
     Blockly.Blocks[block.id] = {
         init(this: Blockly.Block) {
@@ -240,23 +247,30 @@ function 注册时间铡刀积木(block: CIBBlock<any>, 包: 语言包) {
             this.appendDummyInput('基准时间行')
                 .appendField(`${字段名('基准时间')}:`)
                 .appendField(new Blockly.FieldDropdown(年对), '基准时间_年')
-                .appendField('年')
+                .appendField(通用.年)
                 .appendField(new Blockly.FieldDropdown(月对), '基准时间_月')
-                .appendField('月')
+                .appendField(通用.月)
                 .appendField(new Blockly.FieldDropdown(日对), '基准时间_日')
-                .appendField('日')
+                .appendField(通用.日)
                 .appendField(new Blockly.FieldDropdown(时对), '基准时间_时')
-                .appendField('时')
+                .appendField(通用.时)
                 .appendField(new Blockly.FieldDropdown(分秒对), '基准时间_分')
-                .appendField('分')
+                .appendField(通用.分)
                 .appendField(new Blockly.FieldDropdown(分秒对), '基准时间_秒')
-                .appendField('秒');
+                .appendField(通用.秒);
 
-            this.appendDummyInput('时区行')
+            const 时区输入 = this.appendDummyInput('时区行')
                 .appendField(`${字段名('时区')}:`)
                 .appendField(new Blockly.FieldDropdown(时区选项), '时区');
 
-            this.appendStatementInput('执行块').appendField('执行');
+            // 按语言设置默认时区
+            try {
+                this.setFieldValue(初始时区, '时区');
+            } catch {
+                // 如果语言对应的时区不在选项里（比如 UTC-08:00 未列出），忽略
+            }
+
+            this.appendStatementInput('执行块').appendField(通用.执行);
 
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -272,6 +286,7 @@ function 注册次数铡刀积木(block: CIBBlock<any>, 包: 语言包) {
     const 图标 = block.meta.icon ?? '🔢';
     const 字段名 = (键: string) => 取字段名(包, block.id, 键, 键);
     const 选项名 = (值: string) => 取选项名(包, block.id, 值, 值);
+    const 通用 = 包.通用;
     const 颜色 = 分类颜色[block.category] ?? 0;
     const 提示 = 包.积木[block.id]?.描述 ?? block.meta.描述;
 
@@ -321,7 +336,7 @@ function 注册次数铡刀积木(block: CIBBlock<any>, 包: 语言包) {
                     '模式',
                 );
 
-            this.appendStatementInput('执行块').appendField('执行');
+            this.appendStatementInput('执行块').appendField(通用.执行);
 
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);

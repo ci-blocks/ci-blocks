@@ -36,7 +36,7 @@ export function 预览栏({ 工作流名称, 平台 = 'github' }: Props) {
             switch (平台) {
                 case 'github':
                 default:
-                    return 生成GitHubYAML(工作流);
+                    return 生成GitHubYAML(工作流,语言包);
             }
         } catch (e) {
             return `# ${语言包.预览栏.生成失败}：${(e as Error).message}`;
@@ -45,7 +45,7 @@ export function 预览栏({ 工作流名称, 平台 = 'github' }: Props) {
 
     return (
         <div style={{ background: '#1e1e1e', color: '#ddd', padding: 12, overflow: 'auto' }}>
-            <h3 style={{ margin: '0 0 12px', color: '#fff' }}>
+            <h3 style={{ margin: '0 0 12px', color: '#ffffff' }}>
                 {语言包.预览栏.标题}：{平台名}
             </h3>
             <pre style={{ margin: 0, fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
