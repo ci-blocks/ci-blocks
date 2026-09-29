@@ -586,12 +586,12 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                         <img
                             src="/favicon.svg"
                             alt={语言包.品牌.slogan}
-                            style={{ width: 64, height: 64 }}
+                            style={{ width: 72, height: 72 }}
                         />
                         <img
                             src="/CI-Blocks%20Logo.svg"
                             alt="CI Blocks"
-                            style={{ width: 240, height: 'auto' }}
+                            style={{ width: 300, height: 'auto' }}
                         />
                         <div><strong style={{ fontSize: 18 }}>CI Blocks</strong></div>
                         <div style={{ color: '#666' }}>{工具.帮助菜单.关于描述}</div>

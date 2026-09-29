@@ -1,4 +1,13 @@
-export type IRKind = '触发器' | '作业' | '步骤' | '门禁' | '缓存' | '自定义' | '过滤' | '判定';
+export type IRKind =
+    | '触发器'
+    | '作业'
+    | '步骤'
+    | '门禁'
+    | '缓存'
+    | '自定义'
+    | '过滤'
+    | '判定'
+    | '条件';
 
 export interface IR门禁 {
     kind: '门禁';
@@ -59,7 +68,23 @@ export interface IR判定 {
     失败时: IRNode[];
 }
 
-export type IRNode = IR门禁 | IR步骤 | IR作业 | IR触发器 | IR过滤 | IR判定;
+export interface IR条件 {
+    kind: '条件';
+    keyword: string;
+    blockId: string;
+    条件类型: '时间' | '次数';
+    参数: Record<string, unknown>;
+    条件成立时执行: IRNode[];
+}
+
+export type IRNode =
+    | IR门禁
+    | IR步骤
+    | IR作业
+    | IR触发器
+    | IR过滤
+    | IR判定
+    | IR条件;
 
 export interface IR工作流 {
     名称: string;

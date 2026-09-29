@@ -17,7 +17,16 @@ export interface 语言包 {
         确定: string;
         加载中: string;
         未命名工作流: string;
-    };
+
+        // 新增
+        年: string;
+        月: string;
+        日: string;
+        时: string;
+        分: string;
+        秒: string;
+        执行: string;
+    },
 
     工具栏: {
         品牌: string;
@@ -152,6 +161,40 @@ export interface 语言包 {
         字段: Record<string, string>;
         选项?: Record<string, string>;
     }>;
+
+    CI日志: {
+        // 步骤名（Actions UI 显示）
+        时间检查: string;              // "时间检查（%1）"
+        次数检查: string;              // "次数检查（%1）"
+        越权检查: string;              // "越权检查（%1）（%2）"
+        异地容灾: string;              // "异地容灾（%1）"
+        门禁: string;                  // "门禁（%1）：%2"
+        检出代码: string;              // "检出代码"
+        未知门禁: string;              // "未实现的门禁 %1"
+        未知条件: string;              // "未知条件（%1）"
+
+        // run 脚本里的日志
+        时间之前: string;              // "当前时间在基准时间之前"
+        时间之后: string;              // "当前时间在基准时间之后"
+        条件不成立跳过: string;        // "%1 不成立，跳过"
+        无法解析基准时间: string;      // "无法解析基准时间：%1（时区 %2）"
+        次数检查通过: string;          // "次数检查通过"
+        次数检查未通过: string;        // "次数检查未通过（%1 %2 %3）"
+        次数条件成立: string;          // "次数条件成立"
+        次数条件不成立: string;        // "次数条件不成立，跳过"
+        次数仅告警: string;            // "次数检查未通过（%1 %2 %3），仅告警"
+        越权检查通过: string;          // "越权检查通过"
+        越权不在负责人表: string;      // "%1 不在负责人表中"
+        越权无权修改: string;          // "%1 无权修改 %2"
+        越权豁免: string;              // "豁免者 %1，跳过越权检查"
+        越权仅告警: string;            // "越权但仅告警"
+        分支不在保护列表: string;      // "分支 %1 不在保护列表，跳过"
+        分支受保护开始检查: string;    // "分支 %1 受保护，开始检查"
+        检测直接push: string;          // "检测到 %1 直接 push 到保护分支 %2"
+        PR需要review: string;          // "PR 需要至少 %1 个 review，当前 %2"
+        分支保护提醒: string;          // "提醒：请在仓库 Settings → Branches 配置分支保护规则"
+        分支保护检查通过: string;      // "保护分支检查通过"
+    }
 }
 
 export function 取积木名(包: 语言包, blockId: string, 回退: string): string {
@@ -179,3 +222,4 @@ export function 取选项名(
 ): string {
     return 包.积木[blockId]?.选项?.[原值] ?? 回退;
 }
+

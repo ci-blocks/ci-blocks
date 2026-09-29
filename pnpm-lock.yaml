@@ -31,6 +31,9 @@ importers:
       '@cib/block-sdk':
         specifier: workspace:*
         version: link:../block-sdk
+      '@cib/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       yaml:
         specifier: ^2.4.0
         version: 2.9.1
