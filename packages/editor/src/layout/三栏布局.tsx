@@ -19,10 +19,13 @@ import {
     部署GitHubPages,
     文本框,
 } from '@cib/blocks-official';
-import { 设置积木箱 } from '../store/编辑器状态';
+import { use编辑器 } from '../store/编辑器状态';
 import { use语言 } from '../store/语言状态';
-import { 加载外部积木, 从URL读取积木参数 } from '../blocks/加载器';
-import {isFileLoadingAllowed} from "vite";
+import {
+    加载单个外部积木,
+    从URL取名字,
+    从URL读取积木参数,
+} from '../blocks/加载器';
 
 const 内置积木 = [
     行为条件,
@@ -48,6 +51,10 @@ export function 三栏布局() {
     const 用户改过 = useRef(false);
     const [加载状态, set加载状态] = useState('');
 
+    const 设置积木箱 = use编辑器((s) => s.设置积木箱);
+    const 添加外部积木 = use编辑器((s) => s.添加外部积木);
+    const 更新外部积木 = use编辑器((s) => s.更新外部积木);
+
     useEffect(() => {
         if (!用户改过.current) {
             设置工作流名称(语言包.通用.未命名工作流);
@@ -56,31 +63,51 @@ export function 三栏布局() {
 
     useEffect(() => {
         const 初始化 = async () => {
+            // 先注册内置积木
+            设置积木箱(内置积木);
+
             const urls = 从URL读取积木参数();
+            if (urls.length === 0) return;
 
-            if (urls.length === 0) {
-                设置积木箱(内置积木);
-                return;
+            set加载状态(
+                `正在加载 ${urls.length} 个外部积木…`,
+            );
+
+            for (const url of urls) {
+                const id = `url-${url}`;
+                添加外部积木({
+                    id,
+                    名称: 从URL取名字(url),
+                    url,
+                    来源: 'URL',
+                    状态: '加载中',
+                    积木: [],
+                    积木数量: 0,
+                });
+
+                const { 积木, 错误 } = await 加载单个外部积木(url);
+                if (错误 || 积木.length === 0) {
+                    更新外部积木(id, {
+                        状态: '失败',
+                        错误: 错误 ?? '未导出积木',
+                        积木: [],
+                        积木数量: 0,
+                    });
+                } else {
+                    更新外部积木(id, {
+                        状态: '成功',
+                        积木,
+                        积木数量: 积木.length,
+                        名称: 积木[0]?.keyword ?? 从URL取名字(url),
+                    });
+                }
             }
 
-            set加载状态(`正在加载 ${urls.length} 个外部积木…`);
-            const { 积木: 外部积木, 错误 } = await 加载外部积木(urls);
-
-            if (错误.length > 0) {
-                console.warn('外部积木加载错误：', 错误);
-                set加载状态(
-                    `加载 ${外部积木.length} 个外部积木，${错误.length} 个失败`,
-                );
-                setTimeout(() => set加载状态(''), 3000);
-            } else {
-                set加载状态(`已加载 ${外部积木.length} 个外部积木`);
-                setTimeout(() => set加载状态(''), 2000);
-            }
-
-            设置积木箱([...内置积木, ...外部积木]);
+            set加载状态('');
         };
 
         初始化();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const 包装设置工作流名称 = (n: string) => {
@@ -89,7 +116,14 @@ export function 三栏布局() {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh',
+                width: '100vw',
+            }}
+        >
             <菜单栏
                 工作区={工作区}
                 工作流名称={工作流名称}
@@ -117,10 +151,25 @@ export function 三栏布局() {
                     overflow: 'hidden',
                 }}
             >
-                <div style={{ position: 'relative', overflow: 'hidden', height: '100%', minHeight: 0 }}>
+                <div
+                    style={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        height: '100%',
+                        minHeight: 0,
+                    }}
+                >
                     <画布 工作区={工作区} />
                 </div>
-                <div style={{ position: 'relative', overflow: 'auto', height: '100%', minHeight: 0, background: '#dddddd' }}>
+                <div
+                    style={{
+                        position: 'relative',
+                        overflow: 'auto',
+                        height: '100%',
+                        minHeight: 0,
+                        background: '#dddddd',
+                    }}
+                >
                     <预览栏 工作流名称={工作流名称} />
                 </div>
             </div>
