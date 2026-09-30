@@ -9,6 +9,7 @@ import {
 import { 读取CIB文件, 应用CIB到工作区 } from '../cib/读取';
 import { 加载模板列表, 加载模板, type 模板元信息 } from '../templates/加载器';
 import { use语言 } from '../store/语言状态';
+import { 外部积木面板 } from '../components/外部积木面板';
 import type { 语言 } from '@cib/i18n';
 
 interface Props {
@@ -25,7 +26,6 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
     const [显示关于, set显示关于] = useState(false);
     const [显示快捷键, set显示快捷键] = useState(false);
     const [显示加载外部积木, set显示加载外部积木] = useState(false);
-    const [外部积木URL, set外部积木URL] = useState('');
     const [模板列表, set模板列表] = useState<模板元信息[]>([]);
     const 文件输入 = useRef<HTMLInputElement>(null);
     const 语言 = use语言((s) => s.语言);
@@ -310,25 +310,6 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
         set当前菜单(null);
     };
 
-    const 执行加载外部积木 = async () => {
-        const urls = 外部积木URL.split(',').map((s) => s.trim()).filter(Boolean);
-        if (urls.length === 0) return;
-        try {
-            const { 加载外部积木 } = await import('../blocks/加载器');
-            const { 积木: 外部积木, 错误 } = await 加载外部积木(urls);
-            if (错误.length > 0) {
-                alert(
-                    `${工具.工具菜单.加载失败}：\n${错误.map((e) => `${e.url}: ${e.消息}`).join('\n')}`,
-                );
-            }
-            显示提示(工具.工具菜单.已加载外部积木.replace('%1', String(外部积木.length)));
-            set显示加载外部积木(false);
-            set外部积木URL('');
-        } catch (e) {
-            alert(`${工具.工具菜单.加载失败}：${(e as Error).message}`);
-        }
-    };
-
     // ========== 帮助 ==========
     const 打开文档 = () => {
         window.open('https://github.com/ZiqianChen2005/ci-blocks#readme', '_blank');
@@ -375,7 +356,7 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     borderBottom: '1px solid #3a454f',
                     position: 'relative',
                     zIndex: 100,
-                    fontSize: 18
+                    fontSize: 18,
                 }}
             >
                 <a
@@ -512,7 +493,7 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
 
                 {提示 && <span style={{ fontSize: 12, color: '#7fdbaf' }}>{提示}</span>}
 
-                <label style={{ fontSize: 13 ,fontWeight: 'bold'}}>
+                <label style={{ fontSize: 13, fontWeight: 'bold' }}>
                     {工具.语言}
                     <select
                         value={语言}
@@ -533,39 +514,14 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                 />
             </div>
 
-            {/* 弹窗：加载外部积木 */}
+            {/* 弹窗：加载外部积木 —— UI 面板 */}
             {显示加载外部积木 && (
-                <弹窗 标题={工具.工具菜单.加载外部积木标题} onClose={() => set显示加载外部积木(false)}>
-                    <div style={{ marginBottom: 12, color: '#666', fontSize: 13 }}>
-                        {工具.工具菜单.加载外部积木说明}
-                    </div>
-                    <input
-                        value={外部积木URL}
-                        onChange={(e) => set外部积木URL(e.target.value)}
-                        placeholder="https://example.com/my-block.js"
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            border: '1px solid #ccc',
-                            borderRadius: 4,
-                            marginBottom: 16,
-                            boxSizing: 'border-box',
-                        }}
-                    />
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                        <button
-                            onClick={() => set显示加载外部积木(false)}
-                            style={{ padding: '6px 16px', border: '1px solid #ccc', borderRadius: 4, cursor: 'pointer', background: 'white' }}
-                        >
-                            {语言包.通用.取消}
-                        </button>
-                        <button
-                            onClick={执行加载外部积木}
-                            style={{ padding: '6px 16px', border: 'none', borderRadius: 4, cursor: 'pointer', background: '#637e99', color: 'white' }}
-                        >
-                            {工具.工具菜单.加载}
-                        </button>
-                    </div>
+                <弹窗
+                    标题={工具.工具菜单.外部积木管理}
+                    onClose={() => set显示加载外部积木(false)}
+                    width={640}
+                >
+                    <外部积木面板 on完成={() => set显示加载外部积木(false)} />
                 </弹窗>
             )}
 
@@ -655,7 +611,7 @@ function 菜单按钮({ 名, 开, onClick }: { 名: string; 开: boolean; onClic
                 borderRadius: 4,
                 cursor: 'pointer',
                 fontSize: '15px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
             }}
         >
             {名}
@@ -711,7 +667,9 @@ function 菜单项({
         >
             <span>{children}</span>
             {快捷键 && (
-                <span style={{ color: '#999', fontSize: 12, marginLeft: 16 }}>{快捷键}</span>
+                <span style={{ color: '#999', fontSize: 12, marginLeft: 16 }}>
+                    {快捷键}
+                </span>
             )}
         </div>
     );
@@ -770,10 +728,12 @@ function 弹窗({
                   标题,
                   children,
                   onClose,
+                  width,
               }: {
     标题: string;
     children: React.ReactNode;
     onClose: () => void;
+    width?: number;
 }) {
     return (
         <div
@@ -793,14 +753,20 @@ function 弹窗({
                     background: 'white',
                     borderRadius: 8,
                     padding: 24,
-                    minWidth: 400,
-                    maxWidth: 600,
+                    minWidth: width ?? 400,
+                    maxWidth: width ?? 600,
                     maxHeight: '80vh',
                     overflow: 'auto',
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginBottom: 16,
+                    }}
+                >
                     <strong style={{ fontSize: 16 }}>{标题}</strong>
                     <button
                         onClick={onClose}

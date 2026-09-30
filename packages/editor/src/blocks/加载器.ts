@@ -1,56 +1,70 @@
 import type { CIBBlock } from '@cib/block-sdk';
 
-export interface 加载结果 {
+export interface 单条加载结果 {
+    积木: CIBBlock<any>[];
+    错误?: string;
+}
+
+export interface 批量加载结果 {
     积木: CIBBlock<any>[];
     错误: { url: string; 消息: string }[];
 }
 
-export async function 加载外部积木(urls: string[]): Promise<加载结果> {
+/** 从 URL 末段推一个可读名字，用于 UI 列表默认显示 */
+export function 从URL取名字(url: string): string {
+    try {
+        const u = new URL(url, window.location.href);
+        const 末段 = u.pathname.split('/').filter(Boolean).pop() ?? url;
+        return 末段.replace(/\.(m?js|ts|cjs)$/i, '') || url;
+    } catch {
+        return url.slice(0, 60);
+    }
+}
+
+/** 加载单个外部积木（URL → 模块 → 积木数组） */
+export async function 加载单个外部积木(url: string): Promise<单条加载结果> {
+    try {
+        const mod = await import(/* @vite-ignore */ url);
+        const 导出 = (mod as any).default ?? mod;
+        const 候选 = Array.isArray(导出) ? 导出 : [导出];
+        const 合法 = 候选.filter(
+            (b: any) => b && typeof b === 'object' && typeof b.id === 'string',
+        ) as CIBBlock<any>[];
+        if (合法.length === 0) {
+            return { 积木: [], 错误: '文件未导出有效的积木' };
+        }
+        return { 积木: 合法 };
+    } catch (e) {
+        return { 积木: [], 错误: (e as Error).message };
+    }
+}
+
+/** 批量加载（保留给内部 / 老调用方） */
+export async function 加载外部积木(urls: string[]): Promise<批量加载结果> {
     const 积木: CIBBlock<any>[] = [];
     const 错误: { url: string; 消息: string }[] = [];
-
     for (const url of urls) {
-        try {
-            const 模块 = await import(/* @vite-ignore */ url);
-            const 默认导出 = 模块.default;
-            if (!默认导出) {
-                错误.push({ url, 消息: '模块没有 default 导出' });
-                continue;
-            }
-
-            // 支持单个积木或数组
-            if (Array.isArray(默认导出)) {
-                for (const b of 默认导出) {
-                    if (校验积木(b)) 积木.push(b);
-                    else 错误.push({ url, 消息: `无效积木：${b?.id ?? '未知'}` });
-                }
-            } else if (校验积木(默认导出)) {
-                积木.push(默认导出);
-            } else {
-                错误.push({ url, 消息: '无效积木对象' });
-            }
-        } catch (e) {
-            错误.push({ url, 消息: (e as Error).message });
+        const r = await 加载单个外部积木(url);
+        if (r.错误) {
+            错误.push({ url, 消息: r.错误 });
+        } else {
+            积木.push(...r.积木);
         }
     }
-
     return { 积木, 错误 };
 }
 
-function 校验积木(b: any): b is CIBBlock<any> {
-    return (
-        b &&
-        typeof b === 'object' &&
-        typeof b.id === 'string' &&
-        typeof b.keyword === 'string' &&
-        typeof b.生成IR === 'function' &&
-        Array.isArray(b.schema)
-    );
-}
-
+/** 从 URL 参数 ?blocks=a.js,b.js 读取要加载的积木列表 */
 export function 从URL读取积木参数(): string[] {
-    const params = new URLSearchParams(location.search);
-    const raw = params.get('blocks');
-    if (!raw) return [];
-    return raw.split(',').map((s) => s.trim()).filter(Boolean);
+    try {
+        const 参数 = new URLSearchParams(window.location.search);
+        const raw = 参数.get('blocks');
+        if (!raw) return [];
+        return raw
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+    } catch {
+        return [];
+    }
 }

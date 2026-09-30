@@ -104,6 +104,21 @@ export const enUS: 语言包 = {
       无模板: '(No templates)',
       已加载模板: 'Template loaded',
       加载模板失败: 'Failed to load template',
+
+      外部积木管理: 'External Blocks',
+      外部积木输入提示:
+          'Enter JS file URLs, comma or newline separated, press Enter to load',
+      未导出积木: 'File does not export valid blocks',
+      已加载列表: 'Loaded',
+      暂无外部积木: 'No external blocks',
+      清空: 'Clear',
+      清空外部积木确认:
+          'Clear all external blocks? They will be removed from the toolbox.',
+      重试: 'Retry',
+      状态成功: 'Loaded %1 blocks',
+      状态失败: 'Load failed',
+      状态加载中: 'Loading…',
+      加载中: 'Loading…',
     },
     帮助菜单: {
       文档: 'Documentation',

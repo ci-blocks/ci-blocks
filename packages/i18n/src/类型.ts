@@ -105,6 +105,19 @@ export interface 语言包 {
             无模板: string;
             已加载模板: string;
             加载模板失败: string;
+
+            外部积木管理: string;
+            外部积木输入提示: string;
+            未导出积木: string;
+            已加载列表: string;
+            暂无外部积木: string;
+            清空: string;
+            清空外部积木确认: string;
+            重试: string;
+            状态成功: string;
+            状态失败: string;
+            状态加载中: string;
+            加载中: string;
         };
         帮助菜单: {
             文档: string;
