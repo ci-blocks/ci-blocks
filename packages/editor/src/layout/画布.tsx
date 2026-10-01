@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Blockly from 'blockly';
-import * as zhHans from 'blockly/msg/zh-hans';
-import * as en from 'blockly/msg/en';
 import 'blockly/blocks';
 import { 注册所有积木 } from '../blockly/注册积木';
 import { 工作区转IR } from '../blockly/工作区转IR';
@@ -11,8 +9,20 @@ import { use语言 } from '../store/语言状态';
 import type { CIBBlock } from '@cib/block-sdk';
 import { type 语言包 } from '@cib/i18n';
 
-Blockly.setLocale(zhHans as any);
-初始化右键菜单();
+import * as zhHans from 'blockly/msg/zh-hans';
+import * as zhHant from 'blockly/msg/zh-hant';
+import * as en from 'blockly/msg/en';
+import * as ja from 'blockly/msg/ja';
+
+const Blockly语言包表: Record<string, any> = {
+    'zh-CN': zhHans,
+    'zh-HK': zhHant,
+    'zh-MO': zhHant,
+    'zh-TW': zhHant,
+    'en-US': en,
+    'ja-JP': ja,
+};
+
 
 interface Props {
     工作区: React.MutableRefObject<Blockly.WorkspaceSvg | null>;
@@ -34,8 +44,9 @@ export function 画布({ 工作区 }: Props) {
 
         setLogo就绪(false);
 
-        const Blockly语言包 = 语言 === 'zh-CN' ? zhHans : en;
-        Blockly.setLocale(Blockly语言包 as any);
+        const Blockly语言包 = Blockly语言包表[语言] ?? en;
+        Blockly.setLocale(Blockly语言包);
+        初始化右键菜单();
 
         let 快照 = 快照ref.current;
         if (工作区.current) {

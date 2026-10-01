@@ -10,7 +10,7 @@ import { 读取CIB文件, 应用CIB到工作区 } from '../cib/读取';
 import { 加载模板列表, 加载模板, type 模板元信息 } from '../templates/加载器';
 import { use语言 } from '../store/语言状态';
 import { 外部积木面板 } from '../components/外部积木面板';
-import type { 语言 } from '@cib/i18n';
+import {语言, 语言包表} from '@cib/i18n';
 
 interface Props {
     工作区: React.MutableRefObject<Blockly.WorkspaceSvg | null>;
@@ -500,8 +500,9 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                         onChange={(e) => 设置语言(e.target.value as 语言)}
                         style={{ marginLeft: 6, padding: '2px 6px' }}
                     >
-                        <option value="zh-CN">简体中文</option>
-                        <option value="en-US">English</option>
+                        {Object.entries(语言包表).map(([代码, 包]) => (
+                            <option key={代码} value={代码}>{包.名称}</option>
+                        ))}
                     </select>
                 </label>
 

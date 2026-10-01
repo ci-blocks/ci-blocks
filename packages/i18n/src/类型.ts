@@ -1,4 +1,4 @@
-export type 语言 = 'zh-CN' | 'en-US';
+export type 语言 = 'zh-CN' | 'zh-HK' | 'zh-MO' | 'zh-TW' | 'en-US' | 'ja-JP';
 
 export interface 语言包 {
     语言: 语言;

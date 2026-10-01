@@ -23,9 +23,18 @@ const 日选项 = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2,
 const 时选项 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 const 分秒选项 = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
-/** 时间铡刀的默认时区：中文用北京时间，英文用洛杉矶时间 */
+/* 时间铡刀的默认时区 */
+const 语言默认时区: Record<string, string> = {
+    'zh-CN': 'UTC+08:00',
+    'zh-HK': 'UTC+08:00',
+    'zh-MO': 'UTC+08:00',
+    'zh-TW': 'UTC+08:00',
+    'en-US': 'UTC-08:00',
+    'ja-JP': 'UTC+09:00',
+};
+
 function 默认时区(语言: string): string {
-    return 语言 === 'en-US' ? 'UTC-08:00' : 'UTC+08:00';
+    return 语言默认时区[语言] ?? 'UTC+00:00';
 }
 
 function 展开日期时间(字段: 字段描述, 显示名: string) {
