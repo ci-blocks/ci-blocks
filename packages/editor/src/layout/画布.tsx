@@ -6,7 +6,7 @@ import { 工作区转IR } from '../blockly/工作区转IR';
 import { 初始化右键菜单, 设置右键菜单语言 } from '../blockly/右键菜单';
 import { use编辑器 } from '../store/编辑器状态';
 import { use语言 } from '../store/语言状态';
-import type { CIBBlock } from '@cib/block-sdk';
+import type { CIBBlock, IRNode } from '@cib/block-sdk';
 import { type 语言包 } from '@cib/i18n';
 
 import * as zhHans from 'blockly/msg/zh-hans';
@@ -22,7 +22,6 @@ const Blockly语言包表: Record<string, any> = {
     'en-US': en,
     'ja-JP': ja,
 };
-
 
 interface Props {
     工作区: React.MutableRefObject<Blockly.WorkspaceSvg | null>;
@@ -102,23 +101,68 @@ export function 画布({ 工作区 }: Props) {
             }
         }, 100);
 
-        // 变更监听：同步 IR + 缩放
+        // ========== 变更监听：同步 IR + 缩放 ==========
         let 动画帧: number | null = null;
-        const 更新 = () => {
-            const nodes = 工作区转IR(ws, (id) => 积木箱.find((b) => b.id === id));
-            setIR(nodes);
+        let 防抖定时: number | null = null;
+        let 更新版本 = 0;
+
+        const 更新 = async () => {
+            const 本次 = ++更新版本;
+            const 当前ws = 工作区.current;
+            if (!当前ws) return;
+
+            let nodes: IRNode[] = [];
             try {
-                快照ref.current = Blockly.serialization.workspaces.save(ws);
+                nodes = await 工作区转IR(
+                    当前ws,
+                    (id) => 积木箱.find((b) => b.id === id),
+                );
+            } catch (e) {
+                console.error('工作区转 IR 失败：', e);
+            }
+
+            // 丢弃过期结果
+            if (本次 !== 更新版本) return;
+            if (工作区.current !== 当前ws) return;
+
+            setIR(nodes);
+
+            try {
+                快照ref.current = Blockly.serialization.workspaces.save(当前ws);
             } catch {}
 
             if (动画帧) cancelAnimationFrame(动画帧);
             动画帧 = requestAnimationFrame(() => {
                 try {
-                    set缩放(ws.getScale?.() ?? 0.9);
+                    set缩放(当前ws.getScale?.() ?? 0.9);
                 } catch {}
             });
         };
-        ws.addChangeListener(更新);
+
+        const 触发更新 = () => {
+            if (防抖定时) clearTimeout(防抖定时);
+            防抖定时 = window.setTimeout(() => {
+                防抖定时 = null;
+                更新();
+            }, 80);
+        };
+
+        const 变更处理 = (e: Blockly.Events.Abstract) => {
+            // 纯 UI 事件（视口、选中）不触发重算
+            if (e.isUiEvent) {
+                // 但视口变化仍要同步缩放
+                if (动画帧) cancelAnimationFrame(动画帧);
+                动画帧 = requestAnimationFrame(() => {
+                    try {
+                        set缩放(ws.getScale?.() ?? 0.9);
+                    } catch {}
+                });
+                return;
+            }
+            触发更新();
+        };
+
+        ws.addChangeListener(变更处理);
         更新();
 
         const 自适应 = () => Blockly.svgResize(ws);
@@ -127,6 +171,9 @@ export function 画布({ 工作区 }: Props) {
         return () => {
             window.removeEventListener('resize', 自适应);
             if (动画帧) cancelAnimationFrame(动画帧);
+            if (防抖定时) clearTimeout(防抖定时);
+            // 版本自增，让所有在途的异步结果作废
+            更新版本++;
         };
     }, [积木箱, 语言]);
 

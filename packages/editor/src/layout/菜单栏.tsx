@@ -607,9 +607,9 @@ function 菜单按钮({ 名, 开, onClick }: { 名: string; 开: boolean; onClic
             style={{
                 padding: '4px 14px',
                 background: 开 ? '#1a252f' : 'transparent',
-                border: '1px solid #4a5f75',
+                border: '1px solid #aaaaaa',
                 color: 'white',
-                borderRadius: 4,
+                borderRadius: 8,
                 cursor: 'pointer',
                 fontSize: '15px',
                 fontWeight: 'bold',

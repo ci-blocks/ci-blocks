@@ -72,12 +72,12 @@ function 处理触发器(
 }
 
 /** 读一个 statement input 里的所有块（含同级链），返回 IR 列表 */
-function 读语句块IR(
+async function 读语句块IR(
     block: Blockly.Block,
     inputName: string,
     找积木: (id: string) => CIBBlock<any> | undefined,
     工作流名称: string,
-): IRNode[] {
+): Promise<IRNode[]> {
     const 结果: IRNode[] = [];
     let 当前 = block.getInputTargetBlock(inputName);
     let 上一个JobId: string | null = null;
@@ -87,11 +87,12 @@ function 读语句块IR(
         if (定义) {
             const 子输入 = 读字段(当前, 定义.schema);
             try {
-                const irs = 定义.生成IR(子输入, { 工作流名称 });
+                // ★ 统一 await
+                const irs = await Promise.resolve(定义.生成IR(子输入, { 工作流名称 }));
                 for (const ir of irs) {
                     if (ir.kind === '触发器') {
-                        const 内分支 = 读语句块IR(当前, '分支块', 找积木, 工作流名称);
-                        const 内作业 = 读语句块IR(当前, '作业块', 找积木, 工作流名称);
+                        const 内分支 = await 读语句块IR(当前, '分支块', 找积木, 工作流名称);
+                        const 内作业 = await 读语句块IR(当前, '作业块', 找积木, 工作流名称);
                         const 合并后 = 处理触发器(ir as IR触发器, 内分支, (ir as IR触发器).事件);
                         结果.push(合并后);
                         结果.push(...内作业);
@@ -100,8 +101,8 @@ function 读语句块IR(
                         if (id) 上一个JobId = id;
                     } else if (ir.kind === '判定') {
                         (ir as IR判定).判定来源 = 上一个JobId ?? '';
-                        const 通过IRs = 读语句块IR(当前, '通过块', 找积木, 工作流名称);
-                        const 失败IRs = 读语句块IR(当前, '失败块', 找积木, 工作流名称);
+                        const 通过IRs = await 读语句块IR(当前, '通过块', 找积木, 工作流名称);
+                        const 失败IRs = await 读语句块IR(当前, '失败块', 找积木, 工作流名称);
                         (ir as IR判定).通过时 = 通过IRs;
                         (ir as IR判定).失败时 = 失败IRs;
                         结果.push(ir);
@@ -109,8 +110,7 @@ function 读语句块IR(
                         const 判定后 = 取最后一个业务作业Id([...通过IRs, ...失败IRs]);
                         if (判定后) 上一个JobId = 判定后;
                     } else if (ir.kind === '条件') {
-                        // 时间铡刀等条件积木
-                        const 执行IRs = 读语句块IR(当前, '执行块', 找积木, 工作流名称);
+                        const 执行IRs = await 读语句块IR(当前, '执行块', 找积木, 工作流名称);
                         (ir as IR条件).条件成立时执行 = 执行IRs;
                         结果.push(ir);
                     } else if (ir.kind === '门禁') {
@@ -132,11 +132,11 @@ function 读语句块IR(
 }
 
 /** 处理顶层链（从链头遍历到链尾） */
-function 处理顶层链(
+async function 处理顶层链(
     链头: Blockly.Block,
     找积木: (id: string) => CIBBlock<any> | undefined,
     工作流名称: string,
-): IRNode[] {
+): Promise<IRNode[]> {
     const 结果: IRNode[] = [];
     let 当前: Blockly.Block | null = 链头;
     let 上一个JobId: string | null = null;
@@ -146,11 +146,12 @@ function 处理顶层链(
         if (定义) {
             const 输入 = 读字段(当前, 定义.schema);
             try {
-                const irs = 定义.生成IR(输入, { 工作流名称 });
+                // ★ 统一 await
+                const irs = await Promise.resolve(定义.生成IR(输入, { 工作流名称 }));
                 for (const ir of irs) {
                     if (ir.kind === '触发器') {
-                        const 分支IRs = 读语句块IR(当前, '分支块', 找积木, 工作流名称);
-                        const 作业IRs = 读语句块IR(当前, '作业块', 找积木, 工作流名称);
+                        const 分支IRs = await 读语句块IR(当前, '分支块', 找积木, 工作流名称);
+                        const 作业IRs = await 读语句块IR(当前, '作业块', 找积木, 工作流名称);
                         const 合并后 = 处理触发器(ir as IR触发器, 分支IRs, (ir as IR触发器).事件);
                         结果.push(合并后);
                         结果.push(...作业IRs);
@@ -159,8 +160,8 @@ function 处理顶层链(
                         if (id) 上一个JobId = id;
                     } else if (ir.kind === '判定') {
                         (ir as IR判定).判定来源 = 上一个JobId ?? '';
-                        const 通过IRs = 读语句块IR(当前, '通过块', 找积木, 工作流名称);
-                        const 失败IRs = 读语句块IR(当前, '失败块', 找积木, 工作流名称);
+                        const 通过IRs = await 读语句块IR(当前, '通过块', 找积木, 工作流名称);
+                        const 失败IRs = await 读语句块IR(当前, '失败块', 找积木, 工作流名称);
                         (ir as IR判定).通过时 = 通过IRs;
                         (ir as IR判定).失败时 = 失败IRs;
                         结果.push(ir);
@@ -168,7 +169,7 @@ function 处理顶层链(
                         const 判定后 = 取最后一个业务作业Id([...通过IRs, ...失败IRs]);
                         if (判定后) 上一个JobId = 判定后;
                     } else if (ir.kind === '条件') {
-                        const 执行IRs = 读语句块IR(当前, '执行块', 找积木, 工作流名称);
+                        const 执行IRs = await 读语句块IR(当前, '执行块', 找积木, 工作流名称);
                         (ir as IR条件).条件成立时执行 = 执行IRs;
                         结果.push(ir);
                     } else if (ir.kind === '门禁') {
@@ -190,16 +191,16 @@ function 处理顶层链(
     return 结果;
 }
 
-export function 工作区转IR(
+export async function 工作区转IR(
     workspace: Blockly.Workspace,
     找积木: (id: string) => CIBBlock<any> | undefined,
     工作流名称 = '未命名工作流',
-): IRNode[] {
+): Promise<IRNode[]> {
     const 节点: IRNode[] = [];
     const 顶层块 = workspace.getTopBlocks(true);
 
     for (const 链头 of 顶层块) {
-        const irs = 处理顶层链(链头, 找积木, 工作流名称);
+        const irs = await 处理顶层链(链头, 找积木, 工作流名称);
         节点.push(...irs);
     }
 
