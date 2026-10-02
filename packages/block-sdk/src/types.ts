@@ -1,5 +1,5 @@
 // ========== IR 类型 ==========
-export type IRKind = '触发器' | '作业' | '步骤' | '门禁' | '缓存' | '自定义' | '过滤' | '判定';
+export type IRKind = '触发器' | '作业' | '步骤' | '门禁' | '缓存' | '自定义' | '过滤' | '判定' | '条件';
 
 export interface IR门禁 {
     kind: '门禁';
@@ -121,7 +121,10 @@ export interface CIBBlock<输入 = Record<string, unknown>> {
         permissions?: string[];
     };
     schema: 字段描述[];
-    生成IR: (输入: 输入, 上下文: 生成上下文) => IRNode[];
+
+    // ★ 关键改动：允许同步或异步返回
+    生成IR: (输入: 输入, 上下文: 生成上下文) => IRNode[] | Promise<IRNode[]>;
+
     还原输入?: (节点: IRNode) => 输入 | null;
     校验?: (输入: 输入) => 诊断[];
 }
