@@ -10,7 +10,7 @@ import { 读取CIB文件, 应用CIB到工作区 } from '../cib/读取';
 import { 加载模板列表, 加载模板, type 模板元信息 } from '../templates/加载器';
 import { use语言 } from '../store/语言状态';
 import { 外部积木面板 } from '../components/外部积木面板';
-import {语言, 语言包表} from '@cib/i18n';
+import type { 语言 } from '@cib/i18n';
 
 interface Props {
     工作区: React.MutableRefObject<Blockly.WorkspaceSvg | null>;
@@ -19,6 +19,16 @@ interface Props {
 }
 
 type 菜单名 = '文件' | '编辑' | '视图' | '工具' | '帮助' | null;
+
+/** 判断键盘事件是否发生在输入类元素上 */
+function 是在输入中(e: KeyboardEvent): boolean {
+    const t = e.target as HTMLElement | null;
+    if (!t) return false;
+    const tag = t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (t.isContentEditable) return true;
+    return false;
+}
 
 export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }: Props) {
     const [当前菜单, set当前菜单] = useState<菜单名>(null);
@@ -325,19 +335,81 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
     useEffect(() => {
         const 处理 = (e: KeyboardEvent) => {
             const ctrl = e.ctrlKey || e.metaKey;
+
+            // ========== 无修饰键 ==========
+            if (!ctrl && !e.altKey) {
+                // Esc 关菜单
+                if (e.key === 'Escape') {
+                    set当前菜单(null);
+                    return;
+                }
+
+                // F1 显示快捷键（不要求在画布焦点上）
+                if (e.key === 'F1') {
+                    e.preventDefault();
+                    set显示快捷键(true);
+                    set当前菜单(null);
+                    return;
+                }
+
+                // 输入框里不处理以下键
+                if (是在输入中(e)) return;
+
+                // Delete / Backspace 删除选中积木
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    e.preventDefault();
+                    删除选中();
+                    return;
+                }
+
+                // 菜单快捷键 F / E / V / T / H
+                const key = e.key.toLowerCase();
+                if (key === 'f') {
+                    e.preventDefault();
+                    set当前菜单((v) => (v === '文件' ? null : '文件'));
+                    return;
+                }
+                if (key === 'e') {
+                    e.preventDefault();
+                    set当前菜单((v) => (v === '编辑' ? null : '编辑'));
+                    return;
+                }
+                if (key === 'v') {
+                    e.preventDefault();
+                    set当前菜单((v) => (v === '视图' ? null : '视图'));
+                    return;
+                }
+                if (key === 't') {
+                    e.preventDefault();
+                    set当前菜单((v) => (v === '工具' ? null : '工具'));
+                    return;
+                }
+                if (key === 'h') {
+                    e.preventDefault();
+                    set当前菜单((v) => (v === '帮助' ? null : '帮助'));
+                    return;
+                }
+            }
+
+            // ========== Ctrl/Cmd 组合 ==========
             if (!ctrl) return;
 
+            // 全局：保存 / 打开 / 新建
             if (e.key === 's') {
                 e.preventDefault();
-                if (e.shiftKey) {
-                    另存为();
-                } else {
-                    保存();
-                }
+                if (e.shiftKey) 另存为();
+                else 保存();
                 return;
             }
             if (e.key === 'o') { e.preventDefault(); 打开(); return; }
             if (e.key === 'n') { e.preventDefault(); 新建(); return; }
+
+            // 视图缩放
+            if (e.key === '=' || e.key === '+') { e.preventDefault(); 放大(); return; }
+            if (e.key === '-' || e.key === '_') { e.preventDefault(); 缩小(); return; }
+            if (e.key === '0') { e.preventDefault(); 重置缩放(); return; }
+
+            // 其余（Ctrl+Z/Y/C/X/V）交给 Blockly 内置处理
         };
         window.addEventListener('keydown', 处理);
         return () => window.removeEventListener('keydown', 处理);
@@ -380,9 +452,14 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     <strong>{工具.品牌}</strong>
                 </a>
 
-                <div ref={菜单容器} style={{ display: 'flex', gap: 4 }}>
+                <div ref={菜单容器} style={{ display: 'flex', gap: 2 }}>
                     {/* 文件 */}
-                    <菜单按钮 名={工具.文件} 开={当前菜单 === '文件'} onClick={() => 切换菜单('文件')} />
+                    <菜单按钮
+                        名={工具.文件}
+                        快捷键="F"
+                        开={当前菜单 === '文件'}
+                        onClick={() => 切换菜单('文件')}
+                    />
                     {当前菜单 === '文件' && (
                         <下拉菜单>
                             <菜单项 onClick={新建} 快捷键="Ctrl+N">{工具.新建}</菜单项>
@@ -415,7 +492,12 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     )}
 
                     {/* 编辑 */}
-                    <菜单按钮 名={工具.编辑} 开={当前菜单 === '编辑'} onClick={() => 切换菜单('编辑')} />
+                    <菜单按钮
+                        名={工具.编辑}
+                        快捷键="E"
+                        开={当前菜单 === '编辑'}
+                        onClick={() => 切换菜单('编辑')}
+                    />
                     {当前菜单 === '编辑' && (
                         <下拉菜单>
                             <菜单项 onClick={撤销} 快捷键="Ctrl+Z">{工具.撤销}</菜单项>
@@ -425,7 +507,7 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                             <菜单项 onClick={剪切} 快捷键="Ctrl+X">{工具.剪切}</菜单项>
                             <菜单项 onClick={粘贴} 快捷键="Ctrl+V">{工具.粘贴}</菜单项>
                             <分隔线 />
-                            <菜单项 onClick={删除选中} 快捷键="Del">{工具.删除}</菜单项>
+                            <菜单项 onClick={删除选中} 快捷键="Delete">{工具.删除}</菜单项>
                             <菜单项 onClick={全选} 快捷键="Ctrl+A">{工具.全选}</菜单项>
                             <分隔线 />
                             <菜单项 onClick={清空画布}>{工具.清空画布}</菜单项>
@@ -433,7 +515,12 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     )}
 
                     {/* 视图 */}
-                    <菜单按钮 名={工具.视图} 开={当前菜单 === '视图'} onClick={() => 切换菜单('视图')} />
+                    <菜单按钮
+                        名={工具.视图}
+                        快捷键="V"
+                        开={当前菜单 === '视图'}
+                        onClick={() => 切换菜单('视图')}
+                    />
                     {当前菜单 === '视图' && (
                         <下拉菜单>
                             <菜单项 onClick={放大} 快捷键="Ctrl+=">{工具.视图菜单.放大}</菜单项>
@@ -447,7 +534,12 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     )}
 
                     {/* 工具 */}
-                    <菜单按钮 名={工具.工具} 开={当前菜单 === '工具'} onClick={() => 切换菜单('工具')} />
+                    <菜单按钮
+                        名={工具.工具}
+                        快捷键="T"
+                        开={当前菜单 === '工具'}
+                        onClick={() => 切换菜单('工具')}
+                    />
                     {当前菜单 === '工具' && (
                         <下拉菜单>
                             <菜单项 onClick={() => { set显示加载外部积木(true); set当前菜单(null); }}>
@@ -459,11 +551,19 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                     )}
 
                     {/* 帮助 */}
-                    <菜单按钮 名={工具.帮助} 开={当前菜单 === '帮助'} onClick={() => 切换菜单('帮助')} />
+                    <菜单按钮
+                        名={工具.帮助}
+                        快捷键="H"
+                        开={当前菜单 === '帮助'}
+                        onClick={() => 切换菜单('帮助')}
+                    />
                     {当前菜单 === '帮助' && (
                         <下拉菜单>
                             <菜单项 onClick={打开文档}>{工具.帮助菜单.文档}</菜单项>
-                            <菜单项 onClick={() => { set显示快捷键(true); set当前菜单(null); }}>
+                            <菜单项
+                                onClick={() => { set显示快捷键(true); set当前菜单(null); }}
+                                快捷键="F1"
+                            >
                                 {工具.帮助菜单.快捷键}
                             </菜单项>
                             <分隔线 />
@@ -500,9 +600,12 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                         onChange={(e) => 设置语言(e.target.value as 语言)}
                         style={{ marginLeft: 6, padding: '2px 6px' }}
                     >
-                        {Object.entries(语言包表).map(([代码, 包]) => (
-                            <option key={代码} value={代码}>{包.名称}</option>
-                        ))}
+                        <option value="zh-CN">简体中文</option>
+                        <option value="zh-HK">繁體中文（香港）</option>
+                        <option value="zh-MO">繁體中文（澳門）</option>
+                        <option value="zh-TW">繁體中文（台灣）</option>
+                        <option value="en-US">English</option>
+                        <option value="ja-JP">日本語</option>
                     </select>
                 </label>
 
@@ -575,11 +678,20 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
             {显示快捷键 && (
                 <弹窗 标题={工具.帮助菜单.快捷键标题} onClose={() => set显示快捷键(false)}>
                     <div style={{ lineHeight: 1.8, fontSize: 13 }}>
-                        <div><strong>{工具.帮助菜单.分组编辑器}</strong></div>
+                        <div><strong>{工具.帮助菜单.分组菜单}</strong></div>
+                        <div>F：{工具.文件}</div>
+                        <div>E：{工具.编辑}</div>
+                        <div>V：{工具.视图}</div>
+                        <div>T：{工具.工具}</div>
+                        <div>H：{工具.帮助}</div>
+                        <div>F1：{工具.帮助菜单.快捷键}</div>
+
+                        <div style={{ marginTop: 12 }}><strong>{工具.帮助菜单.分组编辑器}</strong></div>
                         <div>Ctrl+S：{工具.帮助菜单.快捷键保存}</div>
                         <div>Ctrl+Shift+S：{工具.另存为}</div>
                         <div>Ctrl+O：{工具.帮助菜单.快捷键打开}</div>
                         <div>Ctrl+N：{工具.帮助菜单.快捷键新建}</div>
+
                         <div style={{ marginTop: 12 }}><strong>{工具.帮助菜单.分组画布}</strong></div>
                         <div>Ctrl+Z：{工具.帮助菜单.快捷键撤销}</div>
                         <div>Ctrl+Y：{工具.帮助菜单.快捷键重做}</div>
@@ -588,10 +700,12 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
                         <div>Ctrl+V：{工具.帮助菜单.快捷键粘贴}</div>
                         <div>Delete：{工具.帮助菜单.快捷键删除}</div>
                         <div>Ctrl+A：{工具.帮助菜单.快捷键全选}</div>
+
                         <div style={{ marginTop: 12 }}><strong>{工具.帮助菜单.分组缩放}</strong></div>
                         <div>Ctrl+滚轮：{工具.帮助菜单.快捷键滚轮缩放}</div>
                         <div>Ctrl+=：{工具.帮助菜单.快捷键放大}</div>
                         <div>Ctrl+-：{工具.帮助菜单.快捷键缩小}</div>
+                        <div>Ctrl+0：{工具.帮助菜单.快捷键重置缩放}</div>
                     </div>
                 </弹窗>
             )}
@@ -600,22 +714,50 @@ export function 菜单栏({ 工作区, 工作流名称, 设置工作流名称 }:
 }
 
 // ========== 子组件 ==========
-function 菜单按钮({ 名, 开, onClick }: { 名: string; 开: boolean; onClick: () => void }) {
+function 菜单按钮({
+                      名,
+                      开,
+                      onClick,
+                      快捷键,
+                  }: {
+    名: string;
+    开: boolean;
+    onClick: () => void;
+    快捷键?: string;
+}) {
     return (
         <button
             onClick={onClick}
             style={{
-                padding: '4px 14px',
-                background: 开 ? '#1a252f' : 'transparent',
-                border: '1px solid #aaaaaa',
+                padding: '4px 8px',
+                background: 开 ? '#1111113f' : 'transparent',
+                border: '1px solid #4a5f75',
                 color: 'white',
-                borderRadius: 8,
+                borderRadius: 4,
                 cursor: 'pointer',
                 fontSize: '15px',
                 fontWeight: 'bold',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
             }}
         >
-            {名}
+            <span>{名}</span>
+            {快捷键 && (
+                <span
+                    style={{
+                        fontSize: 10,
+                        color: '#ffffff',
+                        fontWeight: 'normal',
+                        border: '2px solid #dddddd',
+                        borderRadius: 4,
+                        padding: '0 4px',
+                        lineHeight: 1.4,
+                    }}
+                >
+                    {快捷键}
+                </span>
+            )}
         </button>
     );
 }

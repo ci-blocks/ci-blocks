@@ -207,6 +207,7 @@ export interface 语言包 {
         PR需要review: string;          // "PR 需要至少 %1 个 review，当前 %2"
         分支保护提醒: string;          // "提醒：请在仓库 Settings → Branches 配置分支保护规则"
         分支保护检查通过: string;      // "保护分支检查通过"
+
     }
 }
 
